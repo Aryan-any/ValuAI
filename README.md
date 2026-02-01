@@ -87,7 +87,7 @@ ValuAI achieves superior accuracy by combining three distinct cognitive approach
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/YourUsername/ValuAI.git
+    git clone https://github.com/Aryan-any/ValuAI.git
     cd ValuAI
     ```
 
