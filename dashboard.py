@@ -4,12 +4,11 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import time
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
 
 # Import backend components
 from core import get_agent_framework
 from agents.deals import Opportunity
+from agents.search_agent import SearchAgent # NEW
 
 # ==========================================
 # Page Configuration
@@ -35,172 +34,104 @@ st.markdown("""
         font-family: 'Helvetica Neue', sans-serif;
         font-weight: 700;
     }
-    h2, h3 {
-        color: #fafafa;
-    }
     .metric-card {
         background-color: #262730;
         border: 1px solid #363945;
         border-radius: 5px;
         padding: 15px;
-        box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
     }
     .stButton>button {
         background-color: #00BA51;
         color: white;
         border-radius: 5px;
-        border: none;
-        padding: 10px 24px;
-        font-weight: bold;
-    }
-    .stButton>button:hover {
-        background-color: #009c44;
+        height: 3em; 
     }
 </style>
 """, unsafe_allow_html=True)
 
-# ==========================================
-# Application Header
-# ==========================================
+#header
 st.title("🤖 ValuAI Dashboard")
-st.markdown("### Autonomous Multi-Agent Deal Discovery & Valuation Engine")
-st.markdown("---")
+st.markdown("### Real-Time Market Intelligence Engine")
 
 # ==========================================
-# Sidebar Controls
+# Input Section (The "Google" Bar)
 # ==========================================
-with st.sidebar:
-    st.image("https://img.icons8.com/3d-fluency/94/artificial-intelligence.png", width=80)
-    st.header("Control Center")
-    
-    st.markdown("#### ⚙️ Configuration")
-    use_specialist = st.toggle("Enable LLaMA 3.1 Specialist", value=True)
-    use_vector_db = st.toggle("Enable Vector Search (RAG)", value=True)
-    confidence_threshold = st.slider("Min. Discount Threshold ($)", 0, 200, 50)
-    
-    st.markdown("---")
-    st.markdown("#### 🧠 Model Status")
-    st.success("● Frontier Agent (GPT-4o) [Online]")
-    if use_specialist:
-        st.success("● Specialist Agent (LLaMA) [Online]")
-    else:
-        st.warning("● Specialist Agent [Offline]")
-    
-    st.info("● Neural Network [Online]")
+with st.container():
+    c1, c2 = st.columns([4, 1])
+    with c1:
+        user_query = st.text_input("", placeholder="Search for products (e.g., 'Sony WH-1000XM5 headphones')...", label_visibility="collapsed")
+    with c2:
+        scan_btn = st.button("🚀 Find Deals", use_container_width=True)
 
 # ==========================================
-# Session State Management
+# Logic
 # ==========================================
 if "opportunities" not in st.session_state:
     st.session_state.opportunities = []
-if "is_scanning" not in st.session_state:
-    st.session_state.is_scanning = False
-
-# ==========================================
-# Main Action Logic
-# ==========================================
-col1, col2, col3 = st.columns([1, 1, 2])
-
-with col1:
-    scan_btn = st.button("🚀 Initiatize Scan Cycle", use_container_width=True)
 
 if scan_btn:
-    st.session_state.is_scanning = True
+    st.session_state.opportunities = [] # clear previous
     
-    # Placeholder for live logs
-    status_text = st.empty()
-    progress_bar = st.progress(0)
-    
-    # 1. Scanning Phase
-    status_text.markdown("#### 📡 Phase 1: Scanning Global Markets (RSS)...")
-    progress_bar.progress(10)
-    time.sleep(1) # Simulated delay for effect
-    
-    # 2. Agent Initialization
-    framework = get_agent_framework()
-    status_text.markdown("#### 🧠 Phase 2: Orchestrating Agents...")
-    progress_bar.progress(30)
-    
-    # 3. Execution (Real Backend Call)
-    with st.spinner("Analyzing deals with Ensemble Models..."):
-        try:
-            # We run the actual backend logic here
-            found_opps = framework.run()
-            st.session_state.opportunities = found_opps
-        except Exception as e:
-            st.error(f"Execution Error: {str(e)}")
-            st.session_state.opportunities = []
+    # Progress UI
+    with st.status("🔍 Active Search Agent Initialized...", expanded=True) as status:
+        
+        # 1. Search Phase
+        status.write(f"Searching active markets for: **{user_query}**")
+        search_agent = SearchAgent()
+        
+        if user_query:
+            selection = search_agent.scan_query(user_query)
+        else:
+            # Fallback to RSS if empty
+            from agents.scanner_agent import ScannerAgent
+            scanner = ScannerAgent()
+            selection = scanner.scan() # fallback
             
-    progress_bar.progress(100)
-    status_text.markdown("#### ✅ Cycle Complete")
-    time.sleep(0.5)
-    status_text.empty()
-    progress_bar.empty()
+        if not selection or not selection.deals:
+            status.update(label="❌ No deals found", state="error")
+            st.error("No valid listings found. Try a different query.")
+        else:
+            status.write(f"✅ Found {len(selection.deals)} raw listings. Pricing...")
+            
+            # 2. Valuation Phase
+            framework = get_agent_framework()
+            opportunities = []
+            
+            progress_bar = st.progress(0)
+            total = len(selection.deals)
+            
+            for i, deal in enumerate(selection.deals):
+                status.write(f"Valuing Item {i+1}: {deal.product_description[:30]}...")
+                
+                # Direct Ensemble Call
+                estimate = framework.ensemble.price(deal.product_description)
+                
+                discount = estimate - deal.price
+                opp = Opportunity(deal=deal, estimate=estimate, discount=discount)
+                opportunities.append(opp)
+                
+                progress_bar.progress((i+1)/total)
+                
+            st.session_state.opportunities = opportunities
+            status.update(label="✅ Analysis Complete!", state="complete")
 
 # ==========================================
-# Visualization & Results
+# Results View
 # ==========================================
-
 if st.session_state.opportunities:
+    st.markdown("---")
     opps = st.session_state.opportunities
     
-    # Metrics Layer
-    m1, m2, m3 = st.columns(3)
-    total_value = sum([o.estimate for o in opps])
-    total_savings = sum([o.discount for o in opps])
-    
-    m1.metric("Opportunities Found", len(opps), "+{}".format(len(opps)))
-    m2.metric("Total Market Value Identified", f"${total_value:,.2f}")
-    m3.metric("Total Potential Profit", f"${total_savings:,.2f}", delta_color="normal")
-    
-    st.markdown("---")
-    
-    # Detailed Deal Cards
-    st.subheader("💎 High-Value Opportunities")
-    
+    # 3. Visualization
     for opp in opps:
-        with st.expander(f"**{opp.deal.product_description[:60]}...** | Profit: **${opp.discount:.2f}**", expanded=True):
-            c1, c2 = st.columns([2, 1])
-            
-            with c1:
-                st.markdown(f"**Description**: {opp.deal.product_description}")
-                st.markdown(f"[View Listing]({opp.deal.url})")
-            
-            with c2:
-                # Gauge Chart for Deal Quality
-                fig = go.Figure(go.Indicator(
-                    mode = "gauge+number",
-                    value = opp.discount,
-                    title = {'text': "Arbitrage Spread"},
-                    gauge = {
-                        'axis': {'range': [None, opp.estimate]},
-                        'bar': {'color': "#00BA51"},
-                        'steps': [
-                            {'range': [0, 50], 'color': "#363945"},
-                            {'range': [50, opp.estimate], 'color': "#262730"}
-                        ],
-                    }
-                ))
-                fig.update_layout(height=200, margin=dict(l=20, r=20, t=30, b=20), paper_bgcolor='rgba(0,0,0,0)', font={'color': "white"})
-                st.plotly_chart(fig, use_container_width=True)
-                
-                st.text(f"Retail Price: ${opp.deal.price:.2f}")
-                st.text(f"Est. Value:   ${opp.estimate:.2f}")
-
-else:
-    # Empty State (Welcome Screen)
-    st.info("System Idle. Press 'Initialize Scan Cycle' to start the autonomous agents.")
-    
-    # Demo Chart (Mock Data for visual if empty)
-    st.markdown("#### 📊 Implementation Architecture")
-    st.code("""
-    Orchestrator
-       │
-       ├── Scanner Agent (RSS Parsing + Structured Output)
-       │
-       ├── Frontier Agent (RAG + Vector Search)
-       │
-       ├── Neural Network Agent (ResNet Price Prediction)
-       │
-       └── Specialist Agent (LLaMA 3.1 8B Expert)
-    """, language="text")
+        with st.container():
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.subheader(f"{opp.deal.product_description[:50]}...")
+                st.write(f"**URL**: {opp.deal.url}")
+                st.caption(opp.deal.product_description)
+            with col2:
+                delta_color = "normal" if opp.discount > 0 else "inverse"
+                st.metric("Profit Potential", f"${opp.discount:.2f}", f"${opp.estimate:.2f} Est.", delta_color=delta_color)
+                st.write(f"Ask: ${opp.deal.price:.2f}")
+            st.divider()
