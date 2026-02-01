@@ -1,0 +1,15 @@
+version: 1.0
+runtime: python3
+build:
+  commands:
+    build:
+      - pip install -r requirements.base.txt -r requirements.ml.txt
+run:
+  command: streamlit run dashboard.py --server.port 8080 --server.address 0.0.0.0
+  network:
+    port: 8080
+    env:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+env:
+  - name: ENV
+    value: production
