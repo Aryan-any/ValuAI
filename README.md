@@ -26,7 +26,7 @@ The system operates on a **Hierarchical Multi-Agent Orchestration** pattern:
     *   **Scanner Agent**: Utilizes **GPT-4o-mini** with Structured Outputs (JSON Schema) to perform entity extraction and initial heuristics filtering.
     *   **Frontier Agent (RAG)**: Implements **Retrieval Augmented Generation**. It queries a persistent **ChromaDB** vector store using **Sentence-BERT** embeddings (`all-MiniLM-L6-v2`) to retrieve historical pricing context ($k=5$ nearest neighbors) for few-shot prompting.
     *   **Neural Network Agent**: A custom **PyTorch Residual Neural Network (ResNet)** trained on high-dimensional text features (5000-dim HashingVectorizer) to provide deterministic price predictions.
-    *   **Specialist Agent**: A serverless function deployed on **Modal**, representing a fine-tuned expert model for niche categories.
+    *   **Specialist Agent**: A **Fine-Tuned LLaMA 3.1-8B** model (trained via **QLoRA** on Amazon reviews) deployed on **Modal**, providing high-precision valuation for niche categories.
 3.  **Ensemble Valuation Layer**:
     *   Optimized Weighted Averaging: $P_{final} = w_1 \cdot P_{RAG} + w_2 \cdot P_{NN} + w_3 \cdot P_{Specialist}$
     *   Dynamic weight adjustment based on model availability (Fault Tolerance).
@@ -71,9 +71,10 @@ ValuAI achieves superior accuracy by combining three distinct cognitive approach
 *   **Tech**: `PyTorch`, `Numpy`.
 
 ### 3. The Specialist Approach (Remote Function)
-*   **Mechanism**: **Fine-Tuned Domain Expert**.
-*   **Deployment**: Runs as a remote serverless function to decouple heavy compute from the main orchestration loop.
-*   **Tech**: `Modal`, `HF Transformers`.
+*   **Mechanism**: **Fine-Tuned Domain Expert (LLaMA 3.1-8B)**.
+*   **Training**: Optimized using **QLoRA** (Quantized Low-Rank Adapters) on a custom dataset of scraped Amazon product reviews.
+*   **Deployment**: Runs as a remote serverless function allowing the lightweight agent framework to leverage massive 8B parameter intelligence.
+*   **Tech**: `Modal`, `HuggingFace`, `LLaMA-3.1-8B`.
 
 ---
 

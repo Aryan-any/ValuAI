@@ -23,7 +23,7 @@ class SpecialistAgent(Agent):
         """
         Make a remote call to return the estimate of the price of this item
         """
-        self.log("Specialist Agent is calling remote fine-tuned model")
+        self.log("Specialist Agent is calling remote LLaMA-3.1-8B-QLoRA model on Modal")
         result = self.pricer.price.remote(description)
-        self.log(f"Specialist Agent completed - predicting ${result:.2f}")
+        self.log(f"specialist Agent (LLaMA-3.1) completed - predicting ${result:.2f}")
         return result
