@@ -12,6 +12,9 @@ python-multipart
 # UI
 gradio
 
+# LLM abstraction
+litellm
+
 # Networking
 requests
 beautifulsoup4

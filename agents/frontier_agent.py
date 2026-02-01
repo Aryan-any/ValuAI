@@ -18,7 +18,7 @@ class FrontierAgent(Agent):
         """
         self.log("Initializing Frontier Agent")
         self.client = OpenAI()
-        self.MODEL = "gpt-5.1"
+        self.MODEL = "gpt-4o-mini"
         self.log("Frontier Agent is setting up with OpenAI")
         self.collection = collection
         self.model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
@@ -88,7 +88,7 @@ class FrontierAgent(Agent):
             model=self.MODEL,
             messages=self.messages_for(description, documents, prices),
             seed=42,
-            reasoning_effort="none",
+            # reasoning_effort not supported by gpt-4o-mini
         )
         reply = response.choices[0].message.content
         result = self.get_price(reply)
