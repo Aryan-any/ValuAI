@@ -135,9 +135,11 @@ def train():
     print("Starting QLoRA Fine-tuning...")
     trainer.train()
     
-    # 10. Save Model
+    # 10. Save Model & Push to Hub
     print(f"Saving model to {NEW_MODEL}")
     trainer.model.save_pretrained(NEW_MODEL)
+    trainer.push_to_hub(NEW_MODEL)
+    print(f"Model pushed to HuggingFace Hub: {NEW_MODEL}")
     
     # Stop W&B
     wandb.finish()

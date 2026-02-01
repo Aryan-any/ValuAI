@@ -79,8 +79,9 @@ class EnsembleAgent(Agent):
         
         # Dynamic ensemble weighting based on available models
         if self.has_specialist and self.has_neural_network and specialist and neural_network:
-            # Full Ensemble: Frontier (80%), Specialist (10%), NN (10%)
-            combined = frontier * 0.8 + specialist * 0.1 + neural_network * 0.1
+            # Full Ensemble: Specialist (45%), Frontier (45%), NN (10%)
+            # Specialist (LLaMA) given equal weight to Frontier as it outperforms/matches in specific categories
+            combined = frontier * 0.45 + specialist * 0.45 + neural_network * 0.1
             self.log(f"Using 3-model ensemble: Frontier=${frontier:.2f}, Specialist=${specialist:.2f}, NN=${neural_network:.2f}")
         elif self.has_specialist and specialist:
             # Fallback A: Frontier (90%), Specialist (10%)
