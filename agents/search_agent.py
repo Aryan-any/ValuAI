@@ -31,9 +31,14 @@ class SearchAgent(Agent):
         self.log(f"Search Agent executing active search for: '{query}'")
         
         # 1. Surgical Strike: Get search results (Fast & Free)
-        # We append 'price' or 'deal' to ensure e-commerce intent
-        search_query = f"{query} price deal site:amazon.com OR site:bestbuy.com OR site:walmart.com"
+        # Try specific e-commerce sites first
+        search_query = f"{query} price site:amazon.com OR site:bestbuy.com"
         results = list(self.ddgs.text(search_query, max_results=10))
+        
+        # Fallback: Broad search if strict search fails
+        if not results:
+            self.log("Strict search returned 0 results. Retrying with broad search...")
+            results = list(self.ddgs.text(f"{query} price", max_results=10))
         
         self.log(f"Search Agent found {len(results)} raw results from DuckDuckGo")
         

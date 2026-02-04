@@ -1,5 +1,5 @@
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [ValidateSet("2", "3", "4", "5", "6")]
     [string]$Day
 )
@@ -11,7 +11,7 @@ function Write-Step {
     Write-Host -ForegroundColor Cyan "`n[ValuAI Auto-Dev] $Message"
 }
 
-function Success-Step {
+function Write-Success {
     param([string]$Message)
     Write-Host -ForegroundColor Green "[SUCCESS] $Message"
 }
@@ -69,7 +69,7 @@ if __name__ == '__main__':
         
         git add .
         git commit -m "test: add unit test suite and test discovery infrastructure"
-        Success-Step "Day 2 Complete! Tests added and committed."
+        Write-Success "Day 2 Complete! Tests added and committed."
     }
 
     "3" {
@@ -111,7 +111,7 @@ jobs:
         
         git add .
         git commit -m "ci: add github actions workflow for continuous integration"
-        Success-Step "Day 3 Complete! CI/CD pipeline added and committed."
+        Write-Success "Day 3 Complete! CI/CD pipeline added and committed."
     }
 
     "4" {
@@ -126,7 +126,7 @@ jobs:
         
         git add .
         git commit -m "docs: add CI status badges and project metadata"
-        Success-Step "Day 4 Complete! Documentation updated."
+        Write-Success "Day 4 Complete! Documentation updated."
     }
 
     "5" {
@@ -152,7 +152,7 @@ By contributing, you agree that your contributions will be licensed under its MI
         
         git add .
         git commit -m "community: add CONTRIBUTING.md guidelines"
-        Success-Step "Day 5 Complete! Community files added."
+        Write-Success "Day 5 Complete! Community files added."
     }
     
     "6" {
@@ -165,7 +165,7 @@ By contributing, you agree that your contributions will be licensed under its MI
 
         git add .
         git commit -m "chore: optimize logging configuration and bump version to v1.1.0"
-        Success-Step "Day 6 Complete! Version bumped."
+        Write-Success "Day 6 Complete! Version bumped."
     }
 }
 

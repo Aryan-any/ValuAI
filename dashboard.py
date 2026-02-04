@@ -59,7 +59,7 @@ st.markdown("### Real-Time Market Intelligence Engine")
 with st.container():
     c1, c2 = st.columns([4, 1])
     with c1:
-        user_query = st.text_input("", placeholder="Search for products (e.g., 'Sony WH-1000XM5 headphones')...", label_visibility="collapsed")
+        user_query = st.text_input("Product Query", placeholder="Search for products (e.g., 'Sony WH-1000XM5 headphones')...", label_visibility="collapsed")
     with c2:
         scan_btn = st.button("🚀 Find Deals", use_container_width=True)
 
