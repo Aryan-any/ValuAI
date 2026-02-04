@@ -131,3 +131,10 @@ uvicorn api:app --reload
 ## 📜 License
 
 MIT License. Copyright (c) 2026.
+
+## 🧪 Running Tests
+
+Run the automated test suite:
+``bash
+python -m unittest discover tests
+``
